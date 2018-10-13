@@ -34,12 +34,24 @@ const char* arg_func(ArgFormat* arg_base, int arg_num) {
 void Workshop_Func(int unk, ArgFormat* args) {
 	printf("Loaded Workshop Command!\n");
 
-	if(args->num_args < 1) {
-		printf("No supplied arguments!\n");
+	if(args->num_args < 2) {
+		printf("Insufficient supplied arguments!\n");
 		return;
 	}
 
-	std::string file = arg_func(args, 1);
+
+	std::string sWorkshopIdentifier = arg_func(args, 1);
+
+	unsigned long id = 0;
+
+	try {
+		id = std::stol(sWorkshopIdentifier);
+	} catch(...) {
+		printf("Invalid workshop ID!\n");
+		return;
+	}
+
+	std::string file = arg_func(args, 2);
 	
 	Bootil::AutoBuffer buf;
 	Bootil::AutoBuffer out;
@@ -59,11 +71,7 @@ void Workshop_Func(int unk, ArgFormat* args) {
 
 	unsigned long crc = Bootil::Hasher::CRC32::Easy(out.GetBase(), out.GetWritten());
 
-	/*std::to_string is broken in valve's preferred version of the toolchain */
-	std::ostringstream os;
-	os << crc;
-
-	file = os.str() + std::string("_.gma");
+	file = std::to_string(crc) + std::string("_.gma");
 
 	printf("Successfully compressed file. CRC: %u\n", crc);
 
@@ -91,7 +99,7 @@ void Workshop_Func(int unk, ArgFormat* args) {
 
 	result ? printf("File Share failed!\n") : printf("File Share completed successfully!\n");
 
-	api = remote->CreatePublishedFileUpdateRequest(4000, 1536284345);
+	api = remote->CreatePublishedFileUpdateRequest(4000, id);
 
 	if (!api) {
 		printf("PublishFileUpdateRequest failed!");
