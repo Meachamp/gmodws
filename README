@@ -37,6 +37,6 @@ If compiling the module itself, follow these steps.
 - Get a copy of libbootil and put it somewhere. You can use the compiled version included with this project, or compile it yourself with the instructions above. 
 - Run the following command:
 ```
-/path/to/valve/steam-runtime/bin/g++ -shared -fPIC -m32 -I path/to/bootil/include -L/path/to/custom/libs -lbootil preload.c -o preload.so
+/path/to/valve/steam-runtime/bin/g++ -std=c++0x -shared -fPIC -m32 -I path/to/bootil/include -L/path/to/custom/libs -lbootil preload.c -o preload.so
 ```
 - Put libbootil and preload shared objects in the linux32 of steamcmd
