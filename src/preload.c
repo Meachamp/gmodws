@@ -143,7 +143,7 @@ __attribute__((constructor)) void Init() {
 	typedef void(*Register_func)(void* buf, const char* command, void* func, const char* help, int, int, int, int);
 	Register_func Register = (Register_func)((char*)createIface - 0x67A0);
 	
-	char* buf = new char[32];
+	char* buf = new char[64];
 	
 	Register(buf, "gmod_update_ws", (void*)&Workshop_Func, "", 0, 0, 0, 0);
 
