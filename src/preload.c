@@ -137,11 +137,11 @@ __attribute__((constructor)) void Init() {
 			return;
 	}
 	
-	RemoteUtils = (RemoteUtils_func)((char*)createIface - 0x23DE0);
-	AppUtils = (SteamUtils_func)((char*)createIface - 0x23E20);
+	RemoteUtils = (RemoteUtils_func)((char*)createIface - 0x25450);
+	AppUtils = (SteamUtils_func)((char*)createIface - 0x25490);
 	
 	typedef void(*Register_func)(void* buf, const char* command, void* func, const char* help, int, int, int, int);
-	Register_func Register = (Register_func)((char*)createIface - 0x67A0);
+	Register_func Register = (Register_func)((char*)createIface - 0x6610);
 	
 	char* buf = new char[64];
 	
