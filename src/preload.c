@@ -39,7 +39,6 @@ void Workshop_Func(int unk, ArgFormat* args) {
 		return;
 	}
 
-
 	std::string sWorkshopIdentifier = arg_func(args, 1);
 
 	unsigned long id = 0;
@@ -106,6 +105,10 @@ void Workshop_Func(int unk, ArgFormat* args) {
 	}
 
 	result = remote->UpdatePublishedFileFile(api, file.c_str());
+	
+	if(args->num_args == 3) {
+	    remote->UpdatePublishedFileSetChangeDescription(api, arg_func(args, 3));
+	}
 
 	if (!result) {
 		printf("File update failed.\n");

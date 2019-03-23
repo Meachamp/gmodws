@@ -17,6 +17,11 @@ Next, you should run steamcmd and login with your chosen account once, in order 
 /path/to/custom/steamcmd.sh +login account_name +gmod_update_ws 123456 /path/to/addon.gma +quit
 ```
 
+Optionally, you can specify a third argument to the command. This will all you to control the message that appears in the update changelogs on steam. 
+```
+gmod_update_ws 123456 /path/to/addon.gma "My test commit message"
+```
+
 # Compiling
 Compiling is a little tricky. Due to limitations involving the C Runtime, you will need to compile using a similar version of the runtime distributed with steamCMD. You can get a toolchain with this runtime [here](https://developer.valvesoftware.com/wiki/Source_SDK_2013#Source_SDK_2013_on_Linux). You must compile with this toolchain. 
 
@@ -31,7 +36,6 @@ If compiling bootil, follow these steps.
 
 If compiling the module itself, follow these steps.
 
-- Get a copy of bootil from [here](https://github.com/garrynewman/bootil)
 - Run PATH=/path/to/valve/runtime/bins:$PATH
 - Change directories to src
 - Get a copy of libbootil and put it somewhere. You can use the compiled version included with this project, or compile it yourself with the instructions above. 
