@@ -8,6 +8,7 @@
 #include "SteamEngine.h"
 #include "SteamUser.h"
 #include <chrono>
+#include <unistd.h>
 
 IEngine* g_pEngine;
 
@@ -50,6 +51,7 @@ void Workshop_Func(char** args, int num_args) {
 	
 	if(!login_result) {
 		printf("Cached login credentials not available. Please login with steamCMD.\n");
+		sleep(1000);
 		return;
 	}
 		
