@@ -1,25 +1,33 @@
-# gmod_ws
-gmod_ws is a module that interfaces with steamCMD to upload garry's mod GMA files to the workshop. That's right, you don't need to use graphical steam or gmpublish! With this module you can update straight from steamCMD. This is particularly attractive for automated build solutions involving workshop addons. 
 
-This module adds a single command to steamCMD: gmod_update_ws. This command takes two parameters: the workshop id and the file to upload (this should be absolute). 
+# gmod_ws
+gmod_ws is a binary that can upload garry's mod GMA files to the workshop. That's right, you don't need to use graphical steam or gmpublish! This is particularly attractive for automated build solutions involving workshop addons. 
+
+This project is now a standalone binary. See `gmodws` in the `compiled/` folder. 
 
 Some other goodies are included in this project:
 - Reverse engineered headers for steamCMD's appID based IRemoteStorage API
 - Reverse engineered headers for steamCMD's steamAPI utilities
 - Great example code for Bootil usage and IRemoteStorage API usage
 - Dynamically linked bootil project
+- Reverse engineered steamclient interface
 
 # Usage
-First, you'll need to get yourself a copy of linux steamCMD. Download it from [here.](https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz) Unpack, run it once, then move all the files to a folder named steamcmd. Drop compiled/preload.so and compiled/libbootil.so into the linux32 folder. Drop the launcher/steamcmd.sh folder outside of the steamcmd folder. 
+First, you'll need to get yourself a copy of linux steamCMD. Download it from [here.](https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz) Unpack and run it once. 
 
-Next, you should run steamcmd and login with your chosen account once, in order to cache the credentials. After that, you can automatically run a workshop update with something like this:
+Run steamcmd again and login with your chosen account once in order to cache the credentials. gmod_ws will later use these credentials to login. 
 ```
-/path/to/custom/steamcmd.sh +login account_name +gmod_update_ws 123456 /path/to/addon.gma +quit
+/path/to/steamcmd.sh +login account_name +quit
 ```
 
-Optionally, you can specify a third argument to the command. This will all you to control the message that appears in the update changelogs on steam. 
+Unpack all the files in the `compiled/` folder. You're free to move them wherever, just be aware that the `gmodws` depends on all the shared objects in that folder. The binary can be run as below.
+
 ```
-gmod_update_ws 123456 /path/to/addon.gma "My test commit message"
+./gmodws account_name 123456 /path/to/addon.gma
+```
+
+Optionally, you can specify a fourth argument to the command. This will all you to control the message that appears in the update changelogs on steam. 
+```
+./gmodws account_name 123456 /path/to/addon.gma "My test commit message"
 ```
 
 # Compiling
@@ -34,13 +42,13 @@ If compiling bootil, follow these steps.
 - Configure for release
 - Run gmake and grab the artifacts from release_x32
 
-If compiling the module itself, follow these steps.
+If compiling the binary itself, follow these steps.
 
 - Run PATH=/path/to/valve/runtime/bins:$PATH
 - Change directories to src
 - Get a copy of libbootil and put it somewhere. You can use the compiled version included with this project, or compile it yourself with the instructions above. 
 - Run the following command:
 ```
-/path/to/valve/steam-runtime/bin/g++ -std=c++0x -shared -fPIC -m32 -I path/to/bootil/include -L/path/to/custom/libs -lbootil preload.c -o preload.so
+/path/to/valve/steam-runtime/bin/g++ -g -std=c++0x -Wl,-rpath,. -m32 -I bootil/include -L/path/to/custom/libs -lm -lpthread -ldl -lbootil main.c -o gmodws
 ```
-- Put libbootil and preload shared objects in the linux32 of steamcmd
+- Source the dynamic dependencies from the `compiled/` folder, or an install of steamCMD.
