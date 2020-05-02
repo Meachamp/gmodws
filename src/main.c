@@ -109,39 +109,43 @@ void Workshop_Func(char** args, int num_args) {
 		}
 	}
 	
-	printf("Logged in.\n");
+	std::cout << "Logged in." << std::endl;
 
-	unsigned long long update_val = ugc->StartItemUpdate(4000, 2078619235);
-
-	printf("%ul\n", update_val);
-	
 	std::string sWorkshopIdentifier = args[2];
-
 	unsigned long id = 0;
-
 	try {
 		id = std::stol(sWorkshopIdentifier);
 	} catch(...) {
-		printf("Invalid workshop ID!\n");
+		std::cout << "Invalid workshop ID!" << std::endl;
 		return;
 	}
 
-	std::string file = args[3];
+	std::cout << "Starting Item Update." << std::endl;
+	unsigned long long update_handle = ugc->StartItemUpdate(4000, 2078619235);
+	debug << "Update handle: " << update_handle << std::endl;
 	
-	std::filesystem::path p = file;
-
-	std::cout << std::filesystem::absolute(p) << std::endl;
+	std::filesystem::path p = args[3];
+	auto absPath = std::filesystem::absolute(p);
+	debug << "Absolute path: " << absPath << std::endl;
 
 	Bootil::AutoBuffer buf;
 	Bootil::AutoBuffer out;
-	bool found = Bootil::File::Read(file, buf);
+	bool found = Bootil::File::Read(absPath, buf);
 
 	if(!found) {
-		printf("File not found!\n");
+		std::cout << "File not found." << std::endl;
 		return;
 	}
 
-	printf("Attempting to send file ....\n");
+	std::cout << "Setting Item Content." << std::endl;
+	ugc->SetItemContent(update_handle, (const char*)absPath.c_str());
+
+	std::string update_note = "";
+	if(num_args >= 4)
+		update_note = args[4];
+
+	std::cout << "Submitting item update." << std::endl;
+	unsigned long long call_result = ugc->SubmitItemUpdate(update_handle, (const char*)update_note.c_str());
 
 
 }
