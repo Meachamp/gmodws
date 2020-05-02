@@ -1,13 +1,11 @@
-
 # gmod_ws
-gmod_ws is a binary that can upload garry's mod GMA files to the workshop. That's right, you don't need to use graphical steam or gmpublish! This is particularly attractive for automated build solutions involving workshop addons. 
+gmodws is a binary that can upload garry's mod GMA files to the workshop. That's right, you don't need to use graphical steam or gmpublish! This is particularly attractive for automated build solutions involving workshop addons. 
 
-This project is now a standalone binary. See `gmodws` in the `compiled/` folder. 
+This project is now a standalone binary. You can download it it from the `Releases` section of this repository. 
 
 Some other goodies are included in this project:
 - Reverse engineered headers for steamCMD's appID based IRemoteStorage API
 - Reverse engineered headers for steamCMD's steamAPI utilities
-- Great example code for Bootil usage and IRemoteStorage API usage
 - Reverse engineered steamclient interface
 
 # Usage
@@ -18,7 +16,7 @@ Run steamcmd again and login with your chosen account once in order to cache the
 /path/to/steamcmd.sh +login account_name +quit
 ```
 
-Unpack all the files in the `compiled/` folder. You're free to move them wherever, just be aware that the `gmodws` depends on `steamclient.so`. The binary can be run as below.
+Unpack all the files in the `release zip`. You're free to move them wherever, just be aware that the `gmodws` depends on `steamclient.so`. The binary can be run as below.
 
 ```
 ./gmodws account_name 123456 /path/to/addon.gma
@@ -31,20 +29,6 @@ Optionally, you can specify a fourth argument to the command. This will all you 
 
 # Compiling
 
-If compiling bootil, follow these steps. 
+Compiling is as easy as running `make` on a linux machine with `g++`. The only dependencies are `pthread` and `dl`, which should be included with a standard linux install. At runtime, `gmodws` will need a copy of `steamclient.so`. 
 
-- Download bootil from [here.](https://github.com/garrynewman/bootil)
-
-```
-cd build/bootil/projects
-premake5 gmake
-cd build/bootil/projects/linux/gmake
-make all
-```
-
-If compiling the binary itself:
-```
-cd build/gmodws
-make
-```
-- Source `steamclient.so` from the `compiled/` folder, or an install of steamCMD. Be aware that it is the 64 bit version. 
+- Source `steamclient.so` from the `release zip`, or an install of steamCMD. Be aware that it is the 64 bit version, and the interfaces that `steamclient.so` exports may change without warning in new releases of steamCMD. You should normally stick with the binaries included in the release. 

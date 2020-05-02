@@ -1,2 +1,2 @@
 main:
-	g++ src/main.c -o compiled/gmodws -std=c++17 -I ../bootil/include -Wl,-R,'$$ORIGIN' -lm -ldl -lpthread
+	g++ src/main.c -o compiled/gmodws -std=c++17 -Wl,-R,'$$ORIGIN' -ldl -lpthread
