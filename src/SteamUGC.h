@@ -4,6 +4,7 @@ class IUGC
 public:
     virtual void CreateQueryUserUGCRequest(unsigned int,int,int,int,unsigned int,unsigned int,unsigned int);
     virtual void CreateQueryAllUGCRequest(int,int,unsigned int,unsigned int,char const*);
+    virtual void CreateQueryAllUGCRequest2(int,int,unsigned int,unsigned int,char const*);
     virtual void CreateQueryUGCDetailsRequest(unsigned long long *,unsigned int);
     virtual void SendQueryUGCRequest(unsigned long long);
     virtual void GetQueryUGCResult(unsigned long long,unsigned int,void *);
