@@ -19,6 +19,8 @@ typedef bool(*FreeCallbackFunc)();
 IEngine* g_pEngine;
 CallbackFunc GetCallback;
 FreeCallbackFunc FreeLastCallback;
+int steamPipe = 0;
+int userHdl = 0;
 
 std::ostream debug(0);
 
@@ -40,8 +42,7 @@ void Workshop_Func(char** args, int num_args) {
 		return;
 	}
 	
-	int steamPipe = 0;
-	int userHdl = g_pEngine->CreateGlobalUser(&steamPipe);
+	userHdl = g_pEngine->CreateGlobalUser(&steamPipe);
 	SteamUtils* utils = (SteamUtils*)g_pEngine->GetIClientUtils(steamPipe);
 	SteamRemote* remote = (SteamRemote*)g_pEngine->GetIClientRemoteStorage(steamPipe,userHdl, "");
 	SteamUser* user = (SteamUser*)g_pEngine->GetIClientUser(steamPipe,userHdl,"");
@@ -180,9 +181,12 @@ int main(int argc, char** argv) {
 		std::cout << "Engine interface not present!" << std::endl;
 	    return 1;
 	}
-
+	debug.rdbuf(std::cout.rdbuf());
 	Workshop_Func(argv, argc-1);
 
+	g_pEngine->ReleaseUser(steamPipe, userHdl);
+	g_pEngine->BReleaseSteamPipe(steamPipe);
+	g_pEngine->BShutdownIfAllPipesClosed();
 	pthread_exit(0);
 	return 0;
 }
