@@ -2,7 +2,6 @@
 #include <dlfcn.h>
 #include <string>
 #include <sstream>
-#include <Bootil/Bootil.h>
 #include "SteamRemote.h"
 #include "SteamUtils.h"
 #include "SteamEngine.h"
@@ -12,6 +11,8 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
 
 typedef bool(*CallbackFunc)(int, void*);
 typedef bool(*FreeCallbackFunc)();
@@ -34,6 +35,11 @@ struct CallbackMsg_t
 
 time_t GetTime() {
 	return std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+}
+
+bool file_exists (const std::string& file) {
+    std::ifstream f(file.c_str());
+    return f.good();
 }
 
 void Workshop_Func(char** args, int num_args) {	
@@ -122,19 +128,15 @@ void Workshop_Func(char** args, int num_args) {
 	}
 
 	std::cout << "Starting Item Update." << std::endl;
-	unsigned long long update_handle = ugc->StartItemUpdate(4000, 2078619235);
+	unsigned long long update_handle = ugc->StartItemUpdate(4000, id);
 	debug << "Update handle: " << update_handle << std::endl;
 	
 	std::filesystem::path p = args[3];
 	auto absPath = std::filesystem::absolute(p);
 	debug << "Absolute path: " << absPath << std::endl;
 
-	Bootil::AutoBuffer buf;
-	Bootil::AutoBuffer out;
-	bool found = Bootil::File::Read(absPath, buf);
-
-	if(!found) {
-		std::cout << "File not found." << std::endl;
+	if(!file_exists(absPath)) {
+		std::cout << "File doesn't exist." << std::endl;
 		return;
 	}
 
