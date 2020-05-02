@@ -77,8 +77,8 @@ void Workshop_Func(char** args, int num_args) {
 	}
 	
 	debug << "Setting Creds: " << args[1] << std::endl;
-	int login_result = user->SetAccountNameForCachedCredentialLogin(args[1], 0);
 	
+	int login_result = user->SetAccountNameForCachedCredentialLogin(args[1], 0);
 	if(!login_result) {
 		std::cout << "Cached login credentials not available. Please login with steamCMD." << std::endl;
 		return;

@@ -45,13 +45,13 @@ public:
   virtual void GamepadTextInputClosed(int,bool,char const*);
   virtual void SetSpew(int,int,int);
   virtual void BDownloadsDisabled(void);
-  virtual void SetFocusedWindow(CGameID,bool);
+  virtual void SetFocusedWindow(int,bool);
   virtual void GetSteamUILanguage(void);
   virtual void CheckSteamReachable(void);
-  virtual void SetLastGameLaunchMethod(EGameLaunchMethod);
+  virtual void SetLastGameLaunchMethod(int);
   virtual void SetVideoAdapterInfo(int,int,int,int,int,int,char const*);
-  virtual void SetControllerOverrideMode(CGameID,char const*,unsigned int);
-  virtual void SetOverlayWindowFocusForPipe(bool,bool,CGameID);
+  virtual void SetControllerOverrideMode(int,char const*,unsigned int);
+  virtual void SetOverlayWindowFocusForPipe(bool,bool,int);
   virtual void GetGameOverlayUIInstanceFocusGameID(bool *);
   virtual void SetControllerConfigFileForAppID(unsigned int,char const*);
   virtual void GetControllerConfigFileForAppID(unsigned int,char *,unsigned int);
