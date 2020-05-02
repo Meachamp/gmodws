@@ -91,19 +91,6 @@ void Workshop_Func(char** args, int num_args) {
 	std::cout << "STEAMID:" << s.m_unAll64Bits << std::endl;
 	
 	user->LogOn(s);
-
-	int i = 0;
-	while(i < 5) {
-		CallbackMsg_t c;
-		g_pEngine->RunFrame();
-		if(GetCallback(steamPipe, &c)) {
-			std::cout << c.m_iCallback << std::endl;
-			if(c.m_iCallback == 101)
-				break;
-		}
-		FreeLastCallback();
-		break;
-	}
 	
 	//I really need to reverse callbacks, but this will do for now. 
 	auto startTime = GetTime();
@@ -150,7 +137,27 @@ void Workshop_Func(char** args, int num_args) {
 	std::cout << "Submitting item update." << std::endl;
 	unsigned long long call_result = ugc->SubmitItemUpdate(update_handle, (const char*)update_note.c_str());
 
+	bool res = 0;
+	unsigned long long lastCurrent = 0;
+	while(!utils->IsAPICallCompleted(call_result, &res)) {
+		g_pEngine->RunFrame();
+		unsigned long long current = 0;
+		unsigned long long total = 0;
 
+		ugc->GetItemUpdateProgress(update_handle, &current, &total);
+
+		if(current > 0 && total > 0 && current != lastCurrent) {
+			std::cout << "Progress: " << std::setprecision(4) 
+			<< std::left << (double)current/total*100 
+			<< std::setw(20) << "%" << "\r" << std::flush;
+			lastCurrent = current;
+		}
+	}
+
+	std::cout << std::endl;
+
+	debug << "IsAPICallCompleted Result: " << res << std::endl;
+	std::cout << "Item update complete." << std::endl;
 }
 
 int main(int argc, char** argv) {
@@ -183,7 +190,11 @@ int main(int argc, char** argv) {
 		std::cout << "Engine interface not present!" << std::endl;
 	    return 1;
 	}
+
+#ifdef DEBUG
 	debug.rdbuf(std::cout.rdbuf());
+#endif
+
 	Workshop_Func(argv, argc-1);
 
 	g_pEngine->ReleaseUser(steamPipe, userHdl);
