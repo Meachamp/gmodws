@@ -55,7 +55,7 @@ virtual void SetLanguage(char const*);
 virtual void TrackAppUsageEvent(int,int,char const*);
 virtual void RaiseConnectionPriority(int,int);
 virtual void ResetConnectionPriority(int);
-virtual void BHasCachedCredentials(char const*);
+virtual bool BHasCachedCredentials(char const*);
 virtual int SetAccountNameForCachedCredentialLogin(char const*,bool);
 virtual void DestroyCachedCredentials(char const*);
 virtual void GetCurrentWebAuthToken(char *,int,char *,int);
