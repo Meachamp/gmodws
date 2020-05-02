@@ -58,7 +58,7 @@ public:
     virtual void UpdateItemPreviewFile(unsigned long long,unsigned int,char const*);
     virtual void UpdateItemPreviewVideo(unsigned long long,unsigned int,char const*);
     virtual void RemoveItemPreview(unsigned long long,unsigned int);
-    virtual void SubmitItemUpdate(unsigned long long,char const*);
+    virtual unsigned long long SubmitItemUpdate(unsigned long long,char const*);
     virtual void GetItemUpdateProgress(unsigned long long,unsigned long long *,unsigned long long *);
     virtual void SetUserItemVote(unsigned long long,bool);
     virtual void GetUserItemVote(unsigned long long);
