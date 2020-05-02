@@ -6,21 +6,37 @@
 #include "SteamRemote.h"
 #include "SteamUtils.h"
 #include "SteamEngine.h"
+#include "SteamUGC.h"
 #include "SteamUser.h"
 #include <chrono>
 #include <unistd.h>
+#include <pthread.h>
+#include <filesystem>
+
+typedef bool(*CallbackFunc)(int, void*);
+typedef bool(*FreeCallbackFunc)();
 
 IEngine* g_pEngine;
+CallbackFunc GetCallback;
+FreeCallbackFunc FreeLastCallback;
+
+std::ostream debug(0);
+
+struct CallbackMsg_t
+{
+	int m_hSteamUser;
+	int m_iCallback;
+	char *m_pubParam; 
+	int m_cubParam;
+};
 
 time_t GetTime() {
 	return std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 }
 
-void Workshop_Func(char** args, int num_args) {
-	printf("Loaded Workshop Command!\n");
-	
+void Workshop_Func(char** args, int num_args) {	
 	if(num_args < 3) {
-		printf("Insufficient supplied arguments!\n");
+		std::cout << "Insufficient supplied arguments!" << std::endl;
 		return;
 	}
 	
@@ -29,42 +45,58 @@ void Workshop_Func(char** args, int num_args) {
 	SteamUtils* utils = (SteamUtils*)g_pEngine->GetIClientUtils(steamPipe);
 	SteamRemote* remote = (SteamRemote*)g_pEngine->GetIClientRemoteStorage(steamPipe,userHdl, "");
 	SteamUser* user = (SteamUser*)g_pEngine->GetIClientUser(steamPipe,userHdl,"");
-	
+	IUGC* ugc = (IUGC*)g_pEngine->GetIClientUGC(steamPipe, userHdl);
+
+	debug << "IUGC: " << ugc << std::endl;
 	g_pEngine->RunFrame();
 	
 	if(!utils) {
-	    printf("Could not acquire Utils interface!");
+	    std::cout << "Could not acquire Utils interface!" << std::endl;
 	    return;
 	}
 	
 	if(!remote) {
-	    printf("Could not acquire Remote interface!");
+	    std::cout << "Could not acquire Remote interface!" << std::endl;
 	    return;
 	}
 	
 	if(!user) {
-	    printf("Could not acquire User interface!");
+	    std::cout << "Could not acquire User interface!" << std::endl;
 	    return;
 	}
+
+	if(!ugc) {
+		std::cout << "Could not acquire UGC interface!" << std::endl;
+	}
 	
+	debug << "Setting Creds: " << args[1] << std::endl;
 	int login_result = user->SetAccountNameForCachedCredentialLogin(args[1], 0);
 	
 	if(!login_result) {
-		printf("Cached login credentials not available. Please login with steamCMD.\n");
-		sleep(1000);
+		std::cout << "Cached login credentials not available. Please login with steamCMD." << std::endl;
 		return;
 	}
-		
-	user->RaiseConnectionPriority(2, 13);
 
-	printf("Trying logon state....\n");
+	user->RaiseConnectionPriority(2, 13);
+	std::cout << "Trying logon state...." << std::endl;
 	
-	long long test = 0;
-	CSteamID s = user->GetSteamID();
-	
-	printf("STEAMID %llu\n", s.m_unAll64Bits);
+	CSteamID s = user->GetSteamID();	
+	std::cout << "STEAMID:" << s.m_unAll64Bits << std::endl;
 	
 	user->LogOn(s);
+
+	int i = 0;
+	while(i < 5) {
+		CallbackMsg_t c;
+		g_pEngine->RunFrame();
+		if(GetCallback(steamPipe, &c)) {
+			std::cout << c.m_iCallback << std::endl;
+			if(c.m_iCallback == 101)
+				break;
+		}
+		FreeLastCallback();
+		break;
+	}
 	
 	//I really need to reverse callbacks, but this will do for now. 
 	auto startTime = GetTime();
@@ -78,6 +110,10 @@ void Workshop_Func(char** args, int num_args) {
 	}
 	
 	printf("Logged in.\n");
+
+	unsigned long long update_val = ugc->StartItemUpdate(4000, 2078619235);
+
+	printf("%ul\n", update_val);
 	
 	std::string sWorkshopIdentifier = args[2];
 
@@ -92,6 +128,10 @@ void Workshop_Func(char** args, int num_args) {
 
 	std::string file = args[3];
 	
+	std::filesystem::path p = file;
+
+	std::cout << std::filesystem::absolute(p) << std::endl;
+
 	Bootil::AutoBuffer buf;
 	Bootil::AutoBuffer out;
 	bool found = Bootil::File::Read(file, buf);
@@ -101,88 +141,44 @@ void Workshop_Func(char** args, int num_args) {
 		return;
 	}
 
-	printf("Compressing file...\n");
-	Bootil::Compression::LZMA::Compress(buf.GetBase(), buf.GetWritten(), out, 9, 0x2000000);
-	int written = buf.GetWritten();
-	out.SetPos(out.GetWritten());
-	out.Write(&written, 4);
-	out.Write("+-n+", 4);
-
-	unsigned long crc = Bootil::Hasher::CRC32::Easy(out.GetBase(), out.GetWritten());
-
-	file = std::to_string(crc) + std::string("_.gma");
-
-	printf("Successfully compressed file. CRC: %u\n", crc);
-
 	printf("Attempting to send file ....\n");
 
-	remote->FileDelete(4000, 0, file.c_str());
 
-	bool result = remote->FileWrite(4000, 0, file.c_str(), out.GetBase(), out.GetWritten());
-	result ? printf("File written to cloud successfully!\n") : printf("File Write Failed!\n");
-
-	printf("File Name: %s\n", file.c_str());
-	unsigned long long api = remote->FileShare(4000, 0, file.c_str());
-
-	if (!api) {
-		printf("File Share Initialization failed!\n");
-	}
-
-	while (1) {
-		if (utils->IsAPICallCompleted(api, &result))
-			break;
-	}
-
-	result ? printf("File Share failed!\n") : printf("File Share completed successfully!\n");
-
-	api = remote->CreatePublishedFileUpdateRequest(4000, id);
-
-	if (!api) {
-		printf("PublishFileUpdateRequest failed!");
-	}
-
-	result = remote->UpdatePublishedFileFile(api, file.c_str());
-	
-	if(num_args == 4) {
-	    remote->UpdatePublishedFileSetChangeDescription(api, args[4]);
-	}
-
-	if (!result) {
-		printf("File update failed.\n");
-	} else {
-		printf("File update succeeded!\n");
-	}
-		
-	api = remote->CommitPublishedFileUpdate(4000, 0, api);
-	
-	while (1) {
-		if (utils->IsAPICallCompleted(api, &result))
-			break;
-	}
-
-	result ? printf("Commit failed!\n") : printf("Commit completed successfully!\n");
 }
 
 int main(int argc, char** argv) {
-    printf("Loaded.\n");
+    std::cout << "Loaded." << std::endl;
 	void* steam = dlopen("steamclient.so", RTLD_NOW);
 	
 	if(!steam) {
-	    printf("steamclient not present!");
+	    std::cout << "steamclient not present!" << std::endl;
 	    return 1;
 	}
 	
+	GetCallback = (CallbackFunc)dlsym(steam, "Steam_BGetCallback");
+	FreeLastCallback = (FreeCallbackFunc)dlsym(steam, "Steam_FreeLastCallback");
+	//GetAPICallResult = dlsym(steam, "Steam_GetAPICallResult");
+
+	debug << "GetCallback: " << GetCallback << std::endl;
+	debug << "FreeLastCallback: " << FreeLastCallback << std::endl;
+
 	typedef void*(*InterfaceFunc)(const char*, int);
 	InterfaceFunc steamIface = (InterfaceFunc)dlsym(steam, "CreateInterface");
 	
 	if(!steamIface) {
-	    printf("CreateInterface function not present!");
+	    std::cout << "CreateInterface function not present!" << std::endl;
 	    return 1;
 	}
 	
 	g_pEngine = (IEngine*)steamIface("CLIENTENGINE_INTERFACE_VERSION005", 0);
 
+	if(!g_pEngine) {
+		std::cout << "Engine interface not present!" << std::endl;
+	    return 1;
+	}
+
 	Workshop_Func(argv, argc-1);
 
+	pthread_exit(0);
 	return 0;
 }
