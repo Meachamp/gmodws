@@ -58,6 +58,27 @@ public:
   virtual void GetIClientStreamClient(int,int);
   virtual void GetIClientShortcuts(int,int);
   virtual void* GetIClientUGC(int,int);
+  virtual void GetIClientInventory(int,int);
+  virtual void GetIClientVR(int);
+  virtual void GetIClientGameNotifications(int,int);
+  virtual void GetIClientHTMLSurface(int,int);
+  virtual void GetIClientVideo(int,int);
+  virtual void GetIClientControllerSerialized(int);
+  virtual void GetIClientAppDisableUpdate(int,int);
+  virtual void Set_Client_API_CCheckCallbackRegisteredInProcess(unsigned int (*)(int));
+  virtual void GetIClientBluetoothManager(int);
+  virtual void GetIClientSharedConnection(int,int);
+  virtual void GetIClientShader(int,int);
+  virtual void GetIClientNetworkingSocketsSerialized(int,int);
+  virtual void GetIClientCompat(int,int);
+  virtual void SetClientCommandLine(int,char **);
+  virtual void GetIClientParties(int,int);
+  virtual void GetIClientNetworkingMessages(int,int);
+  virtual void GetIClientNetworkingSockets(int,int);
+  virtual void GetIClientNetworkingUtils(int);
+  virtual void GetIClientNetworkingUtilsSerialized(int);
+  virtual void GetIClientSTARInternal(int,int);
+  virtual void GetIClientRemotePlay(int,int);
 };
 
 
