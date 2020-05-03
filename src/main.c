@@ -1,21 +1,19 @@
-#include <stdio.h>
 #include <dlfcn.h>
-#include <string>
-#include <sstream>
+#include <unistd.h>
+#include <pthread.h>
 #include "SteamRemote.h"
 #include "SteamUtils.h"
 #include "SteamEngine.h"
 #include "SteamUGC.h"
 #include "SteamUser.h"
 #include <chrono>
-#include <unistd.h>
-#include <pthread.h>
+#include <string>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 
 typedef bool(*CallbackFunc)(int, void*);
-typedef bool(*FreeCallbackFunc)();
+typedef bool(*FreeCallbackFunc)(int);
 
 IEngine* g_pEngine;
 CallbackFunc GetCallback;
@@ -42,10 +40,28 @@ bool file_exists (const std::string& file) {
     return f.good();
 }
 
-void Workshop_Func(char** args, int num_args) {	
+int WaitForLogin() {
+	while(true) {
+		CallbackMsg_t c;
+		g_pEngine->RunFrame();
+		if(GetCallback(steamPipe, &c)) {
+			FreeLastCallback(steamPipe);
+			switch(c.m_iCallback) {
+				case 101:
+					return 1;
+				case 102:
+					return 0;
+				default:
+					break;
+			}
+		}
+	}
+}
+
+int Workshop_Func(char** args, int num_args) {	
 	if(num_args < 3) {
 		std::cout << "Insufficient supplied arguments!" << std::endl;
-		return;
+		return 1;
 	}
 	
 	userHdl = g_pEngine->CreateGlobalUser(&steamPipe);
@@ -55,25 +71,28 @@ void Workshop_Func(char** args, int num_args) {
 	IUGC* ugc = (IUGC*)g_pEngine->GetIClientUGC(steamPipe, userHdl);
 
 	debug << "IUGC: " << ugc << std::endl;
+	debug << "Set CCheckCallback" << std::endl;
+	g_pEngine->Set_Client_API_CCheckCallbackRegisteredInProcess(0);
 	g_pEngine->RunFrame();
 	
 	if(!utils) {
 	    std::cout << "Could not acquire Utils interface!" << std::endl;
-	    return;
+	    return 1;
 	}
 	
 	if(!remote) {
 	    std::cout << "Could not acquire Remote interface!" << std::endl;
-	    return;
+	    return 1;
 	}
 	
 	if(!user) {
 	    std::cout << "Could not acquire User interface!" << std::endl;
-	    return;
+	    return 1;
 	}
 
 	if(!ugc) {
 		std::cout << "Could not acquire UGC interface!" << std::endl;
+		return 1;
 	}
 	
 	debug << "Setting Creds: " << args[1] << std::endl;
@@ -81,7 +100,7 @@ void Workshop_Func(char** args, int num_args) {
 	int login_result = user->SetAccountNameForCachedCredentialLogin(args[1], 0);
 	if(!login_result) {
 		std::cout << "Cached login credentials not available. Please login with steamCMD." << std::endl;
-		return;
+		return 1;
 	}
 
 	user->RaiseConnectionPriority(2, 13);
@@ -92,15 +111,9 @@ void Workshop_Func(char** args, int num_args) {
 	
 	user->LogOn(s);
 	
-	//I really need to reverse callbacks, but this will do for now. 
-	auto startTime = GetTime();
-	while(!(user->BLoggedOn())) {
-	    g_pEngine->RunFrame();
-	    auto curTime = GetTime();
-	    if(curTime > startTime + 15) {
-			printf("Login timed out!\n");
-			return;
-		}
+	if(!WaitForLogin()) {
+		std::cout << "Login failed. Please check credentials and try again." << std::endl;
+		return 1;
 	}
 	
 	std::cout << "Logged in." << std::endl;
@@ -111,7 +124,7 @@ void Workshop_Func(char** args, int num_args) {
 		id = std::stol(sWorkshopIdentifier);
 	} catch(...) {
 		std::cout << "Invalid workshop ID!" << std::endl;
-		return;
+		return 1;
 	}
 
 	std::cout << "Starting Item Update." << std::endl;
@@ -124,7 +137,7 @@ void Workshop_Func(char** args, int num_args) {
 
 	if(!file_exists(absPath)) {
 		std::cout << "File doesn't exist." << std::endl;
-		return;
+		return 1;
 	}
 
 	std::cout << "Setting Item Content." << std::endl;
@@ -158,6 +171,7 @@ void Workshop_Func(char** args, int num_args) {
 
 	debug << "IsAPICallCompleted Result: " << res << std::endl;
 	std::cout << "Item update complete." << std::endl;
+	return 0;
 }
 
 int main(int argc, char** argv) {
@@ -171,7 +185,6 @@ int main(int argc, char** argv) {
 	
 	GetCallback = (CallbackFunc)dlsym(steam, "Steam_BGetCallback");
 	FreeLastCallback = (FreeCallbackFunc)dlsym(steam, "Steam_FreeLastCallback");
-	//GetAPICallResult = dlsym(steam, "Steam_GetAPICallResult");
 
 	debug << "GetCallback: " << GetCallback << std::endl;
 	debug << "FreeLastCallback: " << FreeLastCallback << std::endl;
@@ -195,11 +208,10 @@ int main(int argc, char** argv) {
 	debug.rdbuf(std::cout.rdbuf());
 #endif
 
-	Workshop_Func(argv, argc-1);
+	int ret = Workshop_Func(argv, argc-1);
 
 	g_pEngine->ReleaseUser(steamPipe, userHdl);
 	g_pEngine->BReleaseSteamPipe(steamPipe);
 	g_pEngine->BShutdownIfAllPipesClosed();
-	pthread_exit(0);
-	return 0;
+	return ret;
 }
