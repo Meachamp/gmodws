@@ -3,11 +3,6 @@ gmodws is a binary that can upload garry's mod GMA files to the workshop. That's
 
 This project is now a standalone binary. You can download it it from the `Releases` section of this repository. 
 
-Some other goodies are included in this project:
-- Reverse engineered headers for steamCMD's appID based IRemoteStorage API
-- Reverse engineered headers for steamCMD's steamAPI utilities
-- Reverse engineered steamclient interface
-
 # Usage
 First, you'll need to get yourself a copy of linux steamCMD. Download it from [here.](https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz) Unpack and run it once. 
 
