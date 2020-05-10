@@ -32,6 +32,14 @@ struct CallbackMsg_t
     int m_cubParam;
 };
 
+struct SubmitItemUpdateResult_t
+{
+	enum { k_iCallback = 3400 + 4 };
+	int m_eResult;
+	bool m_bUserNeedsToAcceptWorkshopLegalAgreement;
+	unsigned long long m_nPublishedFileId;
+};
+
 time_t GetTime() {
     return std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 }
@@ -47,6 +55,7 @@ int WaitForLogin() {
         g_pEngine->RunFrame();
         if(GetCallback(steamPipe, &c)) {
             FreeLastCallback(steamPipe);
+            
             switch(c.m_iCallback) {
                 case 101:
                     return 1;
@@ -150,6 +159,7 @@ int Workshop_Func(char** args, int num_args) {
 
     std::cout << "Submitting item update." << std::endl;
     unsigned long long call_result = ugc->SubmitItemUpdate(update_handle, (const char*)update_note.c_str());
+    debug << "Call Result: " << call_result << std::endl;
 
     bool res = 0;
     unsigned long long lastCurrent = 0;
@@ -169,6 +179,14 @@ int Workshop_Func(char** args, int num_args) {
     }
 
     std::cout << std::endl;
+
+    SubmitItemUpdateResult_t updateRes;
+    bool pbFailed = 0;
+    bool callResultStatus = utils->GetAPICallResult(call_result, &updateRes, sizeof(SubmitItemUpdateResult_t), 3404, &pbFailed);
+    debug << "pbFailed: " << pbFailed << std::endl;
+    debug << "CallResultStatus: " << callResultStatus << std::endl;
+    debug << "m_eResult: " << updateRes.m_eResult << std::endl;
+    debug << "m_bUserNeedsToAcceptWorkshopLegalAgreement: " << updateRes.m_bUserNeedsToAcceptWorkshopLegalAgreement << std::endl;
 
     debug << "IsAPICallCompleted Result: " << res << std::endl;
     std::cout << "Item update complete." << std::endl;
