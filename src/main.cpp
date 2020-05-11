@@ -161,9 +161,14 @@ int Workshop_Func(char** args, int num_args) {
     unsigned long long call_result = ugc->SubmitItemUpdate(update_handle, (const char*)update_note.c_str());
     debug << "Call Result: " << call_result << std::endl;
 
-    bool res = 0;
+    if(!call_result) {
+        std::cout << "SubmitItemUpdate returned invalid handle" << std::endl;
+        return 1;
+    }
+
+    bool callCompleteFailed = 0;
     unsigned long long lastCurrent = 0;
-    while(!utils->IsAPICallCompleted(call_result, &res)) {
+    while(!utils->IsAPICallCompleted(call_result, &callCompleteFailed)) {
         g_pEngine->RunFrame();
         unsigned long long current = 0;
         unsigned long long total = 0;
@@ -179,6 +184,10 @@ int Workshop_Func(char** args, int num_args) {
     }
 
     std::cout << std::endl;
+    if(callCompleteFailed) {
+        std::cout << "API Call failed" << std::endl;
+        return 1;
+    }
 
     SubmitItemUpdateResult_t updateRes;
     bool pbFailed = 0;
@@ -188,7 +197,18 @@ int Workshop_Func(char** args, int num_args) {
     debug << "m_eResult: " << updateRes.m_eResult << std::endl;
     debug << "m_bUserNeedsToAcceptWorkshopLegalAgreement: " << updateRes.m_bUserNeedsToAcceptWorkshopLegalAgreement << std::endl;
 
-    debug << "IsAPICallCompleted Result: " << res << std::endl;
+    debug << "IsAPICallCompleted Result: " << callCompleteFailed << std::endl;
+
+    if(pbFailed || !callResultStatus) {
+        std::cout << "API Call Result failed" << std::endl;
+        return 1;
+    }
+
+    if(updateRes.m_eResult != 1) {
+        std::cout << "Item update failed (Code " << updateRes.m_eResult << ")" << std::endl;
+        return 1;
+    }
+
     std::cout << "Item update complete." << std::endl;
     return 0;
 }
