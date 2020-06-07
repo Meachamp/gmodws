@@ -12,6 +12,7 @@
 #include <fstream>
 #include <iostream>
 #include <iomanip>
+#include <cstdlib>
 
 typedef bool(*CallbackFunc)(int, void*);
 typedef bool(*FreeCallbackFunc)(int);
@@ -243,9 +244,10 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-#ifdef DEBUG
-    debug.rdbuf(std::cout.rdbuf());
-#endif
+    if(std::getenv("GMODWS_DEBUG")) {
+        std::cout << "Starting debug output." << std::endl;
+        debug.rdbuf(std::cout.rdbuf());
+    }
 
     int ret = Workshop_Func(argv, argc-1);
 
