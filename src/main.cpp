@@ -1,7 +1,6 @@
 #include <dlfcn.h>
 #include <unistd.h>
 #include <pthread.h>
-#include "SteamRemote.h"
 #include "SteamUtils.h"
 #include "SteamEngine.h"
 #include "SteamUGC.h"
@@ -77,7 +76,6 @@ int Workshop_Func(char** args, int num_args) {
     
     userHdl = g_pEngine->CreateGlobalUser(&steamPipe);
     SteamUtils* utils = (SteamUtils*)g_pEngine->GetIClientUtils(steamPipe);
-    SteamRemote* remote = (SteamRemote*)g_pEngine->GetIClientRemoteStorage(steamPipe,userHdl, "");
     SteamUser* user = (SteamUser*)g_pEngine->GetIClientUser(steamPipe,userHdl,"");
     IUGC* ugc = (IUGC*)g_pEngine->GetIClientUGC(steamPipe, userHdl);
 
@@ -88,11 +86,6 @@ int Workshop_Func(char** args, int num_args) {
     
     if(!utils) {
         std::cout << "Could not acquire Utils interface!" << std::endl;
-        return 1;
-    }
-    
-    if(!remote) {
-        std::cout << "Could not acquire Remote interface!" << std::endl;
         return 1;
     }
     
