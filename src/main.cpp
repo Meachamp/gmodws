@@ -103,18 +103,25 @@ int Workshop_Func(char** args, int num_args) {
     
     int login_result = user->SetAccountNameForCachedCredentialLogin(args[1], 0);
     if(!login_result) {
-        std::cout << "Cached login credentials not available. Please login with steamCMD." << std::endl;
-        return 1;
+        std::cout << "Cached login credentials not available." << std::endl;
+
+        if(!std::getenv("STEAM_PASSWORD")) {
+            std::cout << "No password available. Quitting." << std::endl;
+            return 1;
+        }
     }
 
     user->RaiseConnectionPriority(2, 13);
     std::cout << "Trying logon state...." << std::endl;
     
-    CSteamID s = user->GetSteamID();	
-    std::cout << "STEAMID:" << s.m_unAll64Bits << std::endl;
-    
-    user->LogOn(s);
-    
+    if(login_result) {
+        CSteamID s = user->GetSteamID();	
+        std::cout << "STEAMID:" << s.m_unAll64Bits << std::endl;
+        user->LogOn(s);
+    } else {
+        user->LogOnWithPassword(args[1], std::getenv("STEAM_PASSWORD"));
+    }
+        
     if(!WaitForLogin()) {
         std::cout << "Login failed. Please check credentials and try again." << std::endl;
         return 1;
