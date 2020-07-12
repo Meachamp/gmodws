@@ -50,6 +50,7 @@ bool file_exists (const std::string& file) {
 }
 
 int WaitForLogin() {
+    int status = 0;
     while(true) {
         CallbackMsg_t c;
         g_pEngine->RunFrame();
@@ -57,13 +58,22 @@ int WaitForLogin() {
             FreeLastCallback(steamPipe);
             
             switch(c.m_iCallback) {
+                case 987:
+                    status |= 1;
+                    break;
                 case 101:
-                    return 1;
+                    status |= 2;
+                    break;
+                case 5801:
+                    status |= 4;
+                    break;
                 case 102:
                     return 0;
                 default:
                     break;
             }
+            if(status == 7)
+                return 1;
         }
     }
 }
@@ -119,7 +129,9 @@ int Workshop_Func(char** args, int num_args) {
         std::cout << "STEAMID:" << s.m_unAll64Bits << std::endl;
         user->LogOn(s);
     } else {
-        user->LogOnWithPassword(args[1], std::getenv("STEAM_PASSWORD"));
+        user->SetLoginInformation(args[1], std::getenv("STEAM_PASSWORD"), 1);
+        CSteamID s = user->GetSteamID();	
+        user->LogOn(s);
     }
         
     if(!WaitForLogin()) {
