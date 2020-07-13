@@ -86,7 +86,7 @@ int Workshop_Func(char** args, int num_args) {
     
     userHdl = g_pEngine->CreateGlobalUser(&steamPipe);
     SteamUtils* utils = (SteamUtils*)g_pEngine->GetIClientUtils(steamPipe);
-    SteamUser* user = (SteamUser*)g_pEngine->GetIClientUser(steamPipe,userHdl,"");
+    SteamUser* user = (SteamUser*)g_pEngine->GetIClientUser(steamPipe,userHdl);
     IUGC* ugc = (IUGC*)g_pEngine->GetIClientUGC(steamPipe, userHdl);
 
     debug << "IUGC: " << ugc << std::endl;
