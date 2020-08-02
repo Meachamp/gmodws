@@ -9,6 +9,11 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v2
+    - name: Setup Environment
+      run: |
+        sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+        sudo apt-get install g++-10
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 500
     - name: Make
       run: |
         make
