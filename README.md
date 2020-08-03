@@ -22,6 +22,12 @@ Optionally, you can specify a fourth argument to the command. This will all you 
 ./gmodws account_name 123456 /path/to/addon.gma "My test commit message"
 ```
 
+# Without SteamCMD
+For certain CI configurations where a new environment is setup each time a build is triggered, SteamCMD may be too much trouble. Instead, you can log in to your steam account without cached credentials and without steamCMD by setting the `STEAM_PASSWORD` environment variable. Please note that this requires steamguard to be disabled. If you go this route, you should have a dedicated account for pushing workshop builds. 
+
+# Debugging
+Setting the `GMODWS_DEBUG` environment variable will cause gmodws to enter verbose mode, which may be helpful for debugging. 
+
 # Compiling
 
 Compiling is as easy as running `make` on a linux machine with `g++`. The only dependencies are `pthread` and `dl`, which should be included with a standard linux install. At runtime, `gmodws` will need a copy of `steamclient.so`. 
