@@ -21,8 +21,7 @@ RUN chmod +x /home/gmodws/downloadLatest.sh &&\
 USER gmodws
 WORKDIR /home/gmodws
 # Prepare folders and download SteamCMD
-RUN mkdir -p ~/upload &&\
-    mkdir ~/Steam &&\ 
+RUN mkdir ~/upload ~/gmodws ~/Steam &&\ 
     cd ~/Steam &&\
     curl -sqL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" | tar zxvf -
 # Download the latest gmodws release, unzip it and make it runable
