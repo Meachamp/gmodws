@@ -13,7 +13,7 @@
 #include <cstdlib>
 #include <cstdio>
 
-#if __GNUC__ > 8
+#if __GNUC__ > 7
     #include <filesystem>
 #else
     #include <experimental/filesystem>
