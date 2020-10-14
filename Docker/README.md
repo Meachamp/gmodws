@@ -1,12 +1,12 @@
 # Docker Instructions
 
 ## Manually building the container
-First ``cd`` into the Docker directory of this repository and thenrun this command:
+First ``cd`` into the Docker directory of this repository and then run this command:
 ```
 docker build . -t gmodws:latest
 ```
 
-The building process will take some time, but in the end you can just use ``gmodws:latest`` as your ``<IMAGE>`` variable in the usage instructi9ons
+The building process will take some time, but in the end you can just use ``gmodws:latest`` as your ``<IMAGE>`` variable in the usage instructions
 
 ## Using the hosted container
 Aperture Development provides a hosted GModWS container on the DockerHub at this repository: https://hub.docker.com/repository/docker/aperturedevelopment/gmodws
