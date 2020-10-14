@@ -26,7 +26,7 @@ Optionally, you can specify a fourth argument to the command. This will all you 
 For certain CI configurations where a new environment is setup each time a build is triggered, SteamCMD may be too much trouble. Instead, you can log in to your steam account without cached credentials and without steamCMD by setting the `STEAM_PASSWORD` environment variable. Please note that this requires steamguard to be disabled. If you go this route, you should have a dedicated account for pushing workshop builds. 
 
 # Using Docker
-[Docker](https://docs.docker.com/get-docker/) is a great solution for distributing software, mainly because the enviroment required to run the software gets shipped with it. That means all dependencies are already present and you only need to run the software. There are two ways of using the GModWS container, the first being to manually build the container and the second yould be to use the hosted solution.
+[Docker](https://docs.docker.com/get-docker/) is a great solution for distributing software, mainly because the enviroment required to run the software gets shipped with it. That means all dependencies are already present and you only need to run the software. There are two ways of using the GModWS container, the first being to manually build the container and the second would be to use the hosted solution.
 
 You can find the Dockerfile and instructions inside the [Docker folder](/Docker)
 
