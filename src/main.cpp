@@ -7,12 +7,20 @@
 #include "SteamUser.h"
 #include <chrono>
 #include <string>
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>
 #include <cstdio>
+
+#if __GNUC__ > 8
+    #include <filesystem>
+#else
+    #include <experimental/filesystem>
+    namespace std {
+        namespace filesystem = experimental::filesystem;
+    }
+#endif
 
 typedef bool(*CallbackFunc)(int, void*);
 typedef bool(*FreeCallbackFunc)(int);
