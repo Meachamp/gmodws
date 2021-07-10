@@ -1,14 +1,14 @@
 #ifdef _WIN32
-// windows deprecated warnings
-#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
-#define _CRT_SECURE_NO_WARNINGS
+    // windows deprecated warnings
+    #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+    #define _CRT_SECURE_NO_WARNINGS
 
-#include "windows.h"
-#include "stdlib.h"
+    #include "windows.h"
+    #include "stdlib.h"
 #else
-#include <dlfcn.h>
-#include <unistd.h>
-#include <pthread.h>
+    #include <dlfcn.h>
+    #include <unistd.h>
+    #include <pthread.h>
 #endif
 
 #include "SteamUtils.h"
@@ -24,12 +24,12 @@
 #include <cstdio>
 
 #if __GNUC__ > 7
-#include <filesystem>
+    #include <filesystem>
 #else
-#include <experimental/filesystem>
-namespace std {
-    namespace filesystem = experimental::filesystem;
-}
+    #include <experimental/filesystem>
+    namespace std {
+        namespace filesystem = experimental::filesystem;
+    }
 #endif
 
 typedef bool(*CallbackFunc)(int, void*);
@@ -47,7 +47,7 @@ struct CallbackMsg_t
 {
     int m_hSteamUser;
     int m_iCallback;
-    char* m_pubParam;
+    char *m_pubParam;
     int m_cubParam;
 };
 
@@ -165,8 +165,7 @@ int Workshop_Func(char** args, int num_args) {
     unsigned long id = 0;
     try {
         id = std::stol(sWorkshopIdentifier);
-    }
-    catch (...) {
+    } catch (...) {
         std::cout << "Invalid workshop ID!" << std::endl;
         return 1;
     }
