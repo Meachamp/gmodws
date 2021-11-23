@@ -7,9 +7,9 @@ if [ "$ARGUMENT" == "login" ]; then
 elif [ "$ARGUMENT" == "upload" ]; then
     ~/Steam/steamcmd.sh +login $STEAM_USER +quit > /home/gmodws/steamcmd.log&
     sleep 5s
-    LOGGED_IN=$(grep -o 'Logged in OK' /home/gmodws/steamcmd.log)
+    LOGGED_IN=$(grep -o 'to Steam Public...OK' /home/gmodws/steamcmd.log)
 
-    if [ "$LOGGED_IN" == "Logged in OK" ]; then
+    if [ "$LOGGED_IN" == "to Steam Public...OK" ]; then
         cd ~/gmodws
         ./gmodws $STEAM_USER $2 ~/upload/$3 "${@:4}" 
         exit 0
