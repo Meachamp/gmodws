@@ -150,6 +150,14 @@ int Workshop_Func(char** args, int num_args) {
     }
     else {
         user->SetLoginInformation(args[1], std::getenv("STEAM_PASSWORD"), 1);
+        
+        const char* tfaCode = std::getenv("STEAM_2FA");
+        if (tfaCode) {
+            // not sure which one is the correct one so lets set both
+            user->SetTwoFactorCode(tfaCode);
+            user->Set2ndFactorAuthCode(tfaCode, 1);
+        }
+
         CSteamID s = user->GetSteamID();
         user->LogOn(s);
     }
