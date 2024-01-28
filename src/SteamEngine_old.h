@@ -15,7 +15,6 @@ public:
   virtual int SetLocalIPBinding(unsigned int,unsigned short);
   virtual int GetUniverseName(int);
   virtual int GetIClientFriends(int,int);
-  virtual void pad00();
   virtual void* GetIClientUtils(int);
   virtual int GetIClientBilling(int,int);
   virtual int GetIClientMatchmaking(int,int);
@@ -58,11 +57,6 @@ public:
   virtual void GetIClientRemoteClientManager(int);
   virtual void GetIClientStreamClient(int,int);
   virtual void GetIClientShortcuts(int,int);
-  virtual void pad01();
-  virtual void pad02();
-  virtual void pad03();
-  virtual void pad04();
-  virtual void pad05();
   virtual void* GetIClientUGC(int,int);
   virtual void GetIClientInventory(int,int);
   virtual void GetIClientVR(int);

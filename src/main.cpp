@@ -12,6 +12,8 @@
 #include <iomanip>
 #include <cstdlib>
 #include <cstdio>
+#include "2fa.h"
+#include "steam_header.h"
 
 #if __GNUC__ > 7
     #include <filesystem>
@@ -49,6 +51,7 @@ struct SubmitItemUpdateResult_t
 	unsigned long long m_nPublishedFileId;
 };
 
+
 time_t GetTime() {
     return std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 }
@@ -65,8 +68,8 @@ int WaitForLogin() {
         g_pEngine->RunFrame();
         if(GetCallback(steamPipe, &c)) {
             FreeLastCallback(steamPipe);
-            
             switch(c.m_iCallback) {
+                debug << c.m_iCallback << std::endl;
                 case 987:
                     status |= 1;
                     break;
@@ -78,6 +81,9 @@ int WaitForLogin() {
                     break;
                 case 102:
                     return 0;
+                case 1020046:
+                    return 1;
+                    break;
                 default:
                     break;
             }
@@ -129,19 +135,29 @@ int Workshop_Func(char** args, int num_args) {
             return 1;
         }
     }
+    //int login_result = 0;
 
     user->RaiseConnectionPriority(2, 13);
     std::cout << "Trying logon state...." << std::endl;
-    
-    if(login_result) {
-        CSteamID s = user->GetSteamID();	
-        std::cout << "STEAMID:" << s.m_unAll64Bits << std::endl;
-        user->LogOn(s);
-    } else {
+
+    if(!login_result) {
         user->SetLoginInformation(args[1], std::getenv("STEAM_PASSWORD"), 1);
-        CSteamID s = user->GetSteamID();	
-        user->LogOn(s);
     }
+
+    {
+        const char* secret = std::getenv("STEAM_2FASECRET");
+        if (secret) {
+            std::cout << "Setting 2FA Code..." << std::endl;
+            const char* code = code_from_secret(secret);
+
+            std::cout << "Generated code: " << code << std::endl;
+            user->SetTwoFactorCode(code);
+        }
+    }
+    
+    CSteamID s = user->GetSteamID();	
+    std::cout << "STEAMID: " << s.m_unAll64Bits << std::endl;
+    user->LogOn(s);
         
     if(!WaitForLogin()) {
         std::cout << "Login failed. Please check credentials and try again." << std::endl;
@@ -149,8 +165,9 @@ int Workshop_Func(char** args, int num_args) {
     }
     
     std::cout << "Logged in." << std::endl;
-
+    std::cout << "SteamID: " << user->GetSteamID().m_unAll64Bits << std::endl;
     std::string sWorkshopIdentifier = args[2];
+    std::cout << "Workshop ID: " << sWorkshopIdentifier << std::endl;
     unsigned long id = 0;
     try {
         id = std::stol(sWorkshopIdentifier);
@@ -159,7 +176,13 @@ int Workshop_Func(char** args, int num_args) {
         return 1;
     }
 
-    std::cout << "Starting Item Update." << std::endl;
+    {
+        uint64_t* uud = (uint64_t*)ugc;
+        char* uu2 = (char*)(*(uint64_t*)(*(uint64_t*)(*uud - 8) + 8));
+        debug << "UGC VTABLE: " << uud[0] << std::endl;
+        debug << "UGC TYPEINFO: " << uu2 << std::endl;
+    }
+
     unsigned long long update_handle = ugc->StartItemUpdate(4000, id);
     debug << "Update handle: " << update_handle << std::endl;
     
@@ -174,10 +197,19 @@ int Workshop_Func(char** args, int num_args) {
 
     std::cout << "Setting Item Content." << std::endl;
     ugc->SetItemContent(update_handle, (const char*)absPath.c_str());
-
+    ugc->SetItemVisibility(update_handle, 0);
     std::string update_note = "";
     if(num_args >= 4)
         update_note = args[4];
+
+    std::cout << "Setting tags..." << std::endl;
+    SteamParamStringArray_t *pTags = new SteamParamStringArray_t();
+    pTags->m_ppStrings = new const char*[1];
+    pTags->m_ppStrings[0] = "ServerContent";
+    pTags->m_nNumStrings = 1;
+    bool tags_result = ugc->SetItemTags(update_handle, pTags);
+
+    std::cout << "Set Tags result: " << tags_result << std::endl;
 
     std::cout << "Submitting item update." << std::endl;
     unsigned long long call_result = ugc->SubmitItemUpdate(update_handle, (const char*)update_note.c_str());
@@ -188,9 +220,16 @@ int Workshop_Func(char** args, int num_args) {
         return 1;
     }
 
+    {
+        uint64_t* uud = (uint64_t*)utils;
+        char* uu2 = (char*)(*(uint64_t*)(*(uint64_t*)(*uud - 8) + 8));
+        debug << "UTILS VTABLE: " << uud[0] << std::endl;
+        debug << "UTILS TYPEINFO: " << uu2 << std::endl;
+    }
+
     bool callCompleteFailed = 0;
     unsigned long long lastCurrent = 0;
-    while(!utils->IsAPICallCompleted(call_result, &callCompleteFailed)) {
+    while(!utils->IsAPICallCompleted(call_result, &callCompleteFailed) && !callCompleteFailed) {
         g_pEngine->RunFrame();
         unsigned long long current = 0;
         unsigned long long total = 0;
@@ -239,6 +278,13 @@ int main(int argc, char** argv) {
     std::cout << "Loaded." << std::endl;
     void* steam = dlopen("steamclient.so", RTLD_NOW);
     
+    if(std::getenv("GMODWS_DEBUG")) {
+        std::cout << "Starting debug output." << std::endl;
+        debug.rdbuf(std::cout.rdbuf());
+    } else {
+        freopen("/dev/null", "w", stderr);
+    }
+    
     if(!steam) {
         std::cout << "steamclient not present!" << std::endl;
         return 1;
@@ -247,8 +293,8 @@ int main(int argc, char** argv) {
     GetCallback = (CallbackFunc)dlsym(steam, "Steam_BGetCallback");
     FreeLastCallback = (FreeCallbackFunc)dlsym(steam, "Steam_FreeLastCallback");
 
-    debug << "GetCallback: " << GetCallback << std::endl;
-    debug << "FreeLastCallback: " << FreeLastCallback << std::endl;
+    debug << "GetCallback: " << (void*)GetCallback << std::endl;
+    debug << "FreeLastCallback: " << (void*)FreeLastCallback << std::endl;
 
     typedef void*(*InterfaceFunc)(const char*, int);
     InterfaceFunc steamIface = (InterfaceFunc)dlsym(steam, "CreateInterface");
@@ -263,13 +309,6 @@ int main(int argc, char** argv) {
     if(!g_pEngine) {
         std::cout << "Engine interface not present!" << std::endl;
         return 1;
-    }
-
-    if(std::getenv("GMODWS_DEBUG")) {
-        std::cout << "Starting debug output." << std::endl;
-        debug.rdbuf(std::cout.rdbuf());
-    } else {
-        freopen("/dev/null", "w", stderr);
     }
 
     int ret = Workshop_Func(argv, argc-1);
